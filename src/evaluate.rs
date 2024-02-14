@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EvaluationError {
     MissingArgument,
     IncompleteComputation,
@@ -48,18 +48,16 @@ pub fn try_evaluate(expression: &str) -> Result<bool, EvaluationError> {
     Ok(stack.pop().unwrap())
 }
 
-
-fn evaluate(expression: &str) -> bool {
-    match try_evaluate(expression) {
-        Ok(value) => value,
-        Err(err) => {
-            eprintln!("An error occured while evaluting: {err:?}");
-            false
-        }
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn try_evaluate() {
+        assert_eq!(super::try_evaluate("10&"), Ok(false));
+        assert_eq!(super::try_evaluate("10|"), Ok(true));
+        assert_eq!(super::try_evaluate("10|1&"), Ok(true));
+        assert_eq!(super::try_evaluate("101|&"), Ok(true));
+        assert_eq!(super::try_evaluate("11>"), Ok(true));
+        assert_eq!(super::try_evaluate("10="), Ok(false));
+        assert_eq!(super::try_evaluate("1011||="), Ok(true));
     }
 }
-
-pub fn eval_formula(formula: &str) -> bool {
-    evaluate(formula)
-}
-

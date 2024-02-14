@@ -1,9 +1,31 @@
+use core::fmt;
+
 #[derive(Debug, Clone)]
 pub struct Set<T>(Vec<T>);
 
 impl<T> Default for Set<T> {
     fn default() -> Self {
         Self(Vec::new())
+    }
+}
+
+impl<T: Clone> Set<&T> {
+    pub fn cloned(&self) -> Set<T> {
+        Set(self.0.iter().map(|&e| e.clone()).collect())
+    }
+}
+
+impl<T: fmt::Display> fmt::Display for Set<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        let mut elements = self.0.iter();
+        if let Some(first) = elements.next() {
+            write!(f, " {first}")?;
+        }
+        for element in elements {
+            write!(f, ", {element}")?;
+        }
+        write!(f, " }}")
     }
 }
 
@@ -33,7 +55,7 @@ impl<T: Eq> PartialEq<Set<T>> for Set<&T> {
 
 impl<T: Eq> Eq for Set<T> {}
 
-pub fn has_duplicates(mut set: &[impl Eq]) -> bool {
+fn has_duplicates(mut set: &[impl Eq]) -> bool {
     while let Some((first, rest)) = set.split_first() {
         if rest.iter().any(|v| first == v) {
             return true;

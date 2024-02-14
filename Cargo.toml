@@ -4,3 +4,39 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
+[[bin]]
+name = "adder"
+
+[[bin]]
+name = "multiplier"
+
+[[bin]]
+name = "gray_code"
+
+[[bin]]
+name = "eval_formula"
+
+[[bin]]
+name = "print_truth_table"
+
+[[bin]]
+name = "negation_normal_form"
+
+[[bin]]
+name = "conjonctive_normal_form"
+
+[[bin]]
+name = "sat"
+
+[[bin]]
+name = "powerset"
+
+[[bin]]
+name = "eval_set"
+
+[[bin]]
+name = "map"
+
+[[bin]]
+name = "reverse_map"

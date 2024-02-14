@@ -1,4 +1,5 @@
 use core::fmt;
+use std::io;
 
 pub type Symbol = u8;
 
@@ -250,6 +251,32 @@ impl Expression {
     pub fn sat(&self) -> bool {
         self.envs().any(|env| self.eval(env))
     }
+
+    pub fn write_truth_table(&self, output: &mut impl io::Write) -> io::Result<()> {
+        let mut envs = self.envs().peekable();
+        let Some(first_env) = envs.peek() else {
+            return Ok(());
+        };
+        write!(output, "|")?;
+        let mut count = 1;
+        for symbol in first_env.symbols() {
+            count += 1;
+            write!(output, " {} |", symbol as char)?;
+        }
+        write!(output, " = |\n|")?;
+        for _ in 0..count {
+            write!(output, "---|")?;
+        }
+        writeln!(output, "")?;
+        for env in envs {
+            write!(output, "|")?;
+            for value in env.values() {
+                write!(output, " {} |", value as u8)?;
+            }
+            writeln!(output, " {} |", self.eval(env) as u8)?;
+        }
+        Ok(())
+    }
 }
 
 impl core::ops::Not for Expression {
@@ -310,35 +337,31 @@ impl Environment {
             .filter(|i| (self.mask >> i) & 1 != 0)
             .map(|i| (self.values >> i) & 1 != 0)
     }
-
-    // TODO: Create an iterator rather
-    pub fn next(&self) -> Option<Environment> {
-        Some(Self {
-            values: ((self.values | !self.mask).checked_add(1)?) & self.mask,
-            mask: self.mask,
-        })
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Environment;
     use crate::expression::Expression;
 
     #[test]
-    fn environment_next() {
-        let env = Environment {
-            values: 0b001,
-            mask: 0b101,
-        };
-
+    fn write_truth_table() {
+        let expression: Expression = "AB|C&!".parse().unwrap();
+        let mut output = Vec::new();
+        expression.write_truth_table(&mut output).unwrap();
+        let text = std::str::from_utf8(&output).unwrap();
         assert_eq!(
-            env.next(),
-            Some(Environment {
-                values: 0b100,
-                mask: 0b101,
-            })
-        )
+            text, "\
+            | A | B | C | = |\n\
+            |---|---|---|---|\n\
+            | 0 | 0 | 0 | 1 |\n\
+            | 1 | 0 | 0 | 1 |\n\
+            | 0 | 1 | 0 | 1 |\n\
+            | 1 | 1 | 0 | 1 |\n\
+            | 0 | 0 | 1 | 1 |\n\
+            | 1 | 0 | 1 | 0 |\n\
+            | 0 | 1 | 1 | 0 |\n\
+            | 1 | 1 | 1 | 0 |\n"
+        );
     }
 
     #[test]
@@ -355,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn conjonction_normal() {
+    pub fn conjonction_normal() {
         fn check(input: &str, expected: &str) {
             let input: Expression = input.parse().unwrap();
             assert_eq!(input.conjonctive_normal().to_string(), expected);

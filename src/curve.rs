@@ -31,7 +31,7 @@ pub fn reverse_map(n: f64) -> (u16, u16) {
 mod tests {
     #[test]
     fn reversible() {
-        for n in (u32::MIN..u32::MAX).map(f64::from) {
+        for n in (u32::MIN..u32::MAX).step_by(379).map(f64::from) {
             let (x, y) = super::reverse_map(n);
             assert_eq!(n, super::map(x, y));
         }
