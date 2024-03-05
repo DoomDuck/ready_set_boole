@@ -25,7 +25,7 @@ pub fn main() {
                 break 'outer;
             }
 
-            if line.trim().is_empty() {
+            if line == "\n" {
                 break;
             }
 

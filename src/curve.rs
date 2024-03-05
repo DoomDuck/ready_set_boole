@@ -10,11 +10,11 @@ pub fn map(x: u16, y: u16) -> f64 {
 
     let x = fourth;
     let y = fourth >> 31;
-    (x | y) as u32 as f64
+    ((x | y) as u32 as f64) / (u32::MAX as f64)
 }
 
 pub fn reverse_map(n: f64) -> (u16, u16) {
-    let wide_idx = n as u64;
+    let wide_idx = (n * u32::MAX as f64) as u64;
     let packed = (wide_idx & 0x55555555) | ((wide_idx & 0xAAAAAAAA) << 31);
 
     let first = (packed | (packed >> 1)) & 0x3333333333333333;
@@ -31,9 +31,11 @@ pub fn reverse_map(n: f64) -> (u16, u16) {
 mod tests {
     #[test]
     fn reversible() {
-        for n in (u32::MIN..u32::MAX).step_by(379).map(f64::from) {
-            let (x, y) = super::reverse_map(n);
-            assert_eq!(n, super::map(x, y));
+        for x in (0..=u16::MAX).step_by(132) {
+            for y in (0..=u16::MAX).step_by(45) {
+                let n = super::map(x, y);
+                assert_eq!((x, y), super::reverse_map(n));
+            }
         }
     }
 }

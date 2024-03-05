@@ -320,20 +320,22 @@ pub struct Environment {
 impl Environment {
     pub fn enable(&mut self, symbol: Symbol) {
         debug_assert!(SYMBOL_RANGE.contains(&symbol));
-        self.mask |= 1 << symbol.wrapping_sub(b'A');
+        self.mask |= 1 << b'Z' - symbol;
     }
 
     pub fn get(&self, symbol: Symbol) -> Option<bool> {
-        let index = symbol.wrapping_sub(b'A');
+        debug_assert!(SYMBOL_RANGE.contains(&symbol));
+        let index = b'Z' - symbol;
         ((self.mask >> index) & 1 != 0).then_some((self.values >> index) & 1 != 0)
     }
 
     pub fn symbols(&self) -> impl Iterator<Item = Symbol> + '_ {
-        SYMBOL_RANGE.filter(|&s| (self.mask >> (s - b'A')) & 1 != 0)
+        SYMBOL_RANGE.filter(|&s| (self.mask >> (b'Z' - s)) & 1 != 0)
     }
 
     pub fn values(&self) -> impl Iterator<Item = bool> + '_ {
         (0..u32::BITS)
+            .rev()
             .filter(|i| (self.mask >> i) & 1 != 0)
             .map(|i| (self.values >> i) & 1 != 0)
     }
@@ -345,22 +347,23 @@ mod tests {
 
     #[test]
     fn write_truth_table() {
-        let expression: Expression = "AB|C&!".parse().unwrap();
+        let expression: Expression = "AB&C|".parse().unwrap();
         let mut output = Vec::new();
         expression.write_truth_table(&mut output).unwrap();
         let text = std::str::from_utf8(&output).unwrap();
         assert_eq!(
             text, "\
-            | A | B | C | = |\n\
-            |---|---|---|---|\n\
-            | 0 | 0 | 0 | 1 |\n\
-            | 1 | 0 | 0 | 1 |\n\
-            | 0 | 1 | 0 | 1 |\n\
-            | 1 | 1 | 0 | 1 |\n\
-            | 0 | 0 | 1 | 1 |\n\
-            | 1 | 0 | 1 | 0 |\n\
-            | 0 | 1 | 1 | 0 |\n\
-            | 1 | 1 | 1 | 0 |\n"
+                | A | B | C | = |\n\
+                |---|---|---|---|\n\
+                | 0 | 0 | 0 | 0 |\n\
+                | 0 | 0 | 1 | 1 |\n\
+                | 0 | 1 | 0 | 0 |\n\
+                | 0 | 1 | 1 | 1 |\n\
+                | 1 | 0 | 0 | 0 |\n\
+                | 1 | 0 | 1 | 1 |\n\
+                | 1 | 1 | 0 | 1 |\n\
+                | 1 | 1 | 1 | 1 |\n\
+            "
         );
     }
 
