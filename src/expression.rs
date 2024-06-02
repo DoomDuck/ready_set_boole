@@ -231,7 +231,7 @@ impl Expression {
                 (And(x, y), b) => and(or(*x, cl(&b)), or(*y, b)),
                 (a, And(x, y)) => and(or(cl(&a), *x), or(a, *y)),
                 (a, b) => match (norm(&a), norm(&b)) {
-                    (And(_, _), _) | (_, And(_, _)) => or(a, b),
+                    (a @ And(_, _), b) | (a, b @ And(_, _)) => or(a, b),
                     (Or(a, b), c) => or(*a, or(*b, c)),
                     (a, b) => a | b,
                 },
@@ -389,6 +389,7 @@ mod tests {
         check("AB&!", "A!B!|");
         check("AB|!", "A!B!&");
         check("AB|C&", "AB|C&");
+        check("AB|!C|", "A!C|B!C|&");
         check("AB|C|D|", "ABCD|||");
         check("AB&C&D&", "ABCD&&&");
         check("AB&!C!|", "A!B!C!||");
